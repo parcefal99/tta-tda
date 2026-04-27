@@ -1,28 +1,3 @@
-"""
-stream_order.py — Does TDA's accuracy depend on the order of the test stream?
-
-TDA builds its cache incrementally: the cache at step t reflects whatever
-arrived before t.  A lucky early ordering can warm the cache with clean
-prototypes, while an unlucky one can poison it early.  This script runs
-vanilla TDA N times on the same dataset with N different random permutations
-and reports accuracy per seed + mean ± std.
-
-What we measure
----------------
-  accuracy(seed_i)          — top-1 on the full dataset under ordering i
-  mean ± std across seeds   — expected performance and order-sensitivity
-  range (max − min)         — worst-case swing
-
-If std < 0.3%  → TDA is robust to ordering (entropy filter is doing its job)
-If std > 0.5%  → reported single-run numbers depend on luck of the draw
-
-Datasets: ImageNet-A (7 500 images, 200 classes) and DTD (1 692, 47 classes)
-
-Usage:
-  python stream_order.py --config configs --backbone ViT-B/16 \\
-      --data-root ./dataset/ --seeds 5
-"""
-
 import argparse
 import csv
 import os
