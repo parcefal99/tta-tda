@@ -1,32 +1,3 @@
-"""
-TDA-Unc: Uncertainty-aware adaptation strength (Stretch Goal — Part 1).
-
-Core idea: the cache contribution (alpha) is scaled down when the current
-test image has a high-entropy (uncertain) CLIP prediction.
-
-    eff_alpha = alpha * max(0, 1 - unc_scale * prop_entropy)
-
-where prop_entropy ∈ [0, 1] is the normalised softmax entropy of the
-zero-shot CLIP prediction.  A confident image (low entropy) drives
-adaptation at full strength; an uncertain image barely touches the cache.
-
-All Option B controls (margin, momentum, decay) are also available and
-can be combined freely with 'unc'.
-
-Usage:
-  # uncertainty weighting only
-  python tda_unc.py --config configs --datasets A/dtd --backbone RN50 \\
-      --controls unc --unc-scale 1.0
-
-  # sweep unc_scale
-  for S in 0.3 0.5 0.7 1.0; do
-      python tda_unc.py ... --controls unc --unc-scale $S
-  done
-
-  # combine with all Option B controls
-  python tda_unc.py ... --controls unc margin momentum decay --unc-scale 0.7
-"""
-
 import argparse
 import csv
 import os
