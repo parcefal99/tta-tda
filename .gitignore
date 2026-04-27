@@ -1,0 +1,44 @@
+# Datasets — never commit raw data
+dataset/
+
+# Results CSVs and logs — large, regenerable
+results/
+*.log
+
+# Weights and checkpoints
+*.pth
+*.pt
+*.ckpt
+*.pkl
+*.bin
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Wandb
+wandb/
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Report build artifacts
+report/*.aux
+report/*.bbl
+report/*.blg
+report/*.log
+report/*.out
+report/*.pdf
+report/*.synctex.gz
+report/*.toc

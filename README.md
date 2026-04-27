@@ -1,123 +1,196 @@
-# Efficient Test-Time Adaptation of Vision-Language Models
-[![Website](https://img.shields.io/badge/Project-Website-87CEEB)](https://kdiaaa.github.io/tda/)
-[![paper](https://img.shields.io/badge/arXiv-Paper-<COLOR>.svg)](http://arxiv.org/abs/2403.18293)
+# Noise-Robust Test-Time Adaptation of Vision-Language Models via Streaming Stability Controls
 
-> [**Efficient Test-Time Adaptation of Vision-Language Models**](http://arxiv.org/abs/2403.18293)<br>
-> [Adilbek Karmanov](https://www.linkedin.com/in/adilbek-karmanov/), [Dayan Guan](https://dayan-guan.github.io/), [Shijian Lu](https://scholar.google.com/citations?hl=en&user=uYmK-A0AAAAJ&view=en), [Abdulmotaleb El Saddik](https://scholar.google.ca/citations?user=VcOjgngAAAAJ&hl=en), [Eric Xing](https://scholar.google.com/citations?user=5pKTRxEAAAAJ&hl=en)
+**Final Project Report FP17 group — Topic D**
+**Abzal Nurgazy** | April 2026
 
-Official implementation of the paper: "Efficient Test-Time Adaptation of Vision-Language Models" [CVPR 2024].
+## Abstract
 
-## Overview
-![abstract figure](docs/main_figure.png)
-> **<p align="justify"> Abstract:** Test-time adaptation with pre-trained vision-language models has attracted increasing attention for tackling distribution shifts during the test time. Though prior studies have achieved very promising performance, they involve intensive computation which is severely unaligned with test-time adaptation. We design TDA, a training-free dynamic adapter that enables effective and efficient test-time adaptation with vision-language models. TDA works with a lightweight key-value cache that maintains a dynamic queue with few-shot pseudo labels as values and the corresponding test-sample features as keys. Leveraging the key-value cache, TDA allows adapting to test data gradually via progressive pseudo label refinement which is super-efficient without incurring any backpropagation. In addition, we introduce negative pseudo labeling that alleviates the adverse impact of pseudo label noises by assigning pseudo labels to certain negative classes when the model is uncertain about its pseudo label predictions. Extensive experiments over two benchmarks demonstrate TDA’s superior effectiveness and efficiency as compared with the state-of-the-art.
+Test-time adaptation (TTA) enables CLIP-style vision-language models to improve accuracy under distribution shift without retraining. TDA, the state-of-the-art training-free TTA method, builds dynamic positive and negative key-value caches from the test stream, but provides no quality gate on cache updates: a confidently-wrong prediction is stored and corrupts subsequent logits. We implement TDA from scratch, verify it against published results, and extend it with three independently ablatable noise-robustness controls — margin filtering, momentum blending, and affinity decay — together with an uncertainty-aware adaptation strength as a stretch goal. All four controls are evaluated on OOD (ImageNet-A) and cross-domain (DTD) benchmarks with two CLIP backbones (RN50 and ViT-B/16). Systematic ablations over confidence threshold, shot capacity, momentum, and decay factor are reported alongside per-image latency to characterise the accuracy–compute trade-off of each design choice.
 
-## Main Contributions
-In summary, the contributions of this work are threefold: </br>
+> This work builds on **TDA** (Karmanov et al., CVPR 2024).
+> Paper: [arxiv.org/abs/2403.18293](http://arxiv.org/abs/2403.18293) — Code: [github.com/kdiAAA/TDA](https://github.com/kdiAAA/TDA)
 
-* **First**, we design a training-free dynamic adapter (TDA) that can achieve test-time adaptation of vision-language models efficiently and effectively. To the best of our knowledge, this is the first work that investigates the efficiency issue of test-time adaptation of vision-language models. </br>
-* **Second**, we introduce negative pseudo labeling to alleviate the adverse impact of pseudo label noises which makes TDA more robust to pseudo label noises and generalizable to testing data. </br>
-* **Third**, we evaluate TDA extensively over two benchmarks, and experiments show that TDA achieves superior accuracy and efficiency compared with the state-of-the-art. </br>
+---
 
-## Requirements 
+## Extensions: Streaming Stability Controls
+
+Four independently ablatable controls implemented in `tda_stable.py`.
+
+### Control 1 — Margin Filter
+Skip the cache update if the top-1 minus top-2 logit gap is below a threshold `τ_m`. A low margin means the model is nearly equally split between two classes — such predictions are likely noisy.
+
+```
+skip update if  z_(1) - z_(2) < τ_m      (default τ_m = 5.0)
+```
+
+### Control 2 — Momentum Blending
+Blend the incoming feature with the existing prototype instead of hard-replacing it:
+
+```
+f_new = (μ · f_old + (1−μ) · f_incoming) / ‖·‖₂     (default μ = 0.9)
+```
+
+### Control 3 — Affinity Decay
+Down-weight older cache entries exponentially at retrieval time:
+
+```
+Â_ij = (f_i · q_j) · γ^age_j     (default γ = 0.999)
+```
+
+### Stretch Goal — Uncertainty-Aware Fusion
+Scale the cache contribution at inference time by the current image's uncertainty:
+
+```
+α_eff(x) = α · max(0, 1 − s · H(x))     (default s = 1.0)
+```
+
+A confident image uses the full cache weight; a near-uniform prediction gets negligible cache support.
+
+### Stream-Order Sensitivity (`stream_order.py`)
+Evaluates how much TDA's final accuracy depends on the order images arrive. Runs vanilla TDA `N` times with different random permutations and reports mean ± std across seeds.
+
+---
+
+## Requirements
 ### Installation
-Follow these steps to set up a conda environment and ensure all necessary packages are installed:
-
 ```bash
 git clone https://github.com/kdiAAA/TDA.git
 cd TDA
 
-conda create -n tda python=3.7
-conda activate tda
+conda create -n ml python=3.10
+conda activate ml
 
-# The results are produced with PyTorch 1.12.1 and CUDA 11.3
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r requirements.txt
 ```
 
 ### Dataset
-To set up all required datasets, kindly refer to the guidance in [DATASETS.md](docs/DATASETS.md), which incorporates steps for two benchmarks.
+Refer to [DATASETS.md](docs/DATASETS.md) for dataset setup.
 
-## Run TDA
-### Configs
-The configuration for TDA hyperparameters in `configs/dataset.yaml` can be tailored within the provided file to meet the needs of various datasets. This customization includes settings for both the positive and negative caches as outlined below:
-* **Positive Cache Configuration:** Adjustments can be made to the `shot_capacity`, `alpha`, and `beta` values to optimize performance.
+---
 
-* **Negative Cache Configuration:** Similar to the positive cache, the negative cache can also be fine-tuned by modifying the `shot_capacity`, `alpha`, `beta`, as well as the `entropy_threshold` and `mask_threshold` parameters.
+## Running
 
-For ease of reference, the configurations provided aim to achieve optimal performance across datasets on two benchmarks, consistent with the results documented in our paper. However, specific tuning of these parameters for negative cache could potentially unlock further enhancements in performance. Adjusting parameters like `alpha` and `beta` within the positive cache lets you fine-tune things to match the unique needs of each dataset.
+### Original TDA (baseline)
 
-### Running
-To execute the TDA, navigate to the `scripts` directory, where you'll find 4 bash scripts available. Each script is designed to apply the method to two benchmarks, utilizing either the ResNet50 or ViT/B-16 as the backbone architecture. The scripts process the datasets sequentially, as indicated by the order divided by '/' in the script. WandB logging is activated by default. If you wish to deactivate this feature, simply omit the `--wandb-log` argument. 
+```bash
+# OOD benchmark
+bash ./scripts/run_ood_benchmark_rn50.sh
+bash ./scripts/run_ood_benchmark_vit.sh
 
-Below are instructions for running TDA on both Out-of-Distribution (OOD) and Cross-Domain benchmarks using various backbone architectures. Follow the steps suited to your specific needs:"
-
-#### OOD Benchmark
-* **ResNet50**: Run TDA on the OOD Benchmark using the ResNet50 model:
-```
-bash ./scripts/run_ood_benchmark_rn50.sh 
-```
-* **ViT/B-16**: Run TDA on the OOD Benchmark using the ViT/B-16 model.
-```
-bash ./scripts/run_ood_benchmark_vit.sh 
+# Cross-domain benchmark
+bash ./scripts/run_cd_benchmark_rn50.sh
+bash ./scripts/run_cd_benchmark_vit.sh
 ```
 
-#### Cross-Domain Benchmark
-* **ResNet50**: Run TDA on the Cross-Domain Benchmark using the ResNet50 model:
-```
-bash ./scripts/run_cd_benchmark_rn50.sh 
-```
-* **ViT/B-16**: Run TDA on the Cross-Domain Benchmark using the ViT/B-16 model.
-```
-bash ./scripts/run_cd_benchmark_vit.sh 
-```
+---
 
+### Stability Controls (`tda_stable.py`)
 
-### Results
-#### Comparisons in terms of efficiency and effectiveness on ImageNet
-| Method          | Testing Time | Accuracy | Gain   |
-|-----------------|:------------:|:--------:|:------:|
-| [CLIP-ResNet-50](https://arxiv.org/abs/2103.00020)  | **12min**    | 59.81    | 0      |
-| [TPT](https://arxiv.org/abs/2209.07511)            | 12h 50min    | 60.74    | +0.93  |
-| [DiffTPT](https://arxiv.org/abs/2308.06038)         | 34h 45min    | 60.80    | +0.99  |
-| **TDA (Ours)**  | **16min**    | **61.35**|**+1.54**|
+Results saved to `results/stable_<backbone>_<controls>_<date>.csv`.
 
-#### OOD Benchmark
-| Method            | ImageNet (IN)| IN-A | IN-V2 | IN-R | IN-S | Average | OOD Average |
-|-------------------|:--------:|:----------:|:-----------:|:----------:|:----------:|:-------:|:-----------:|
-| [CLIP-ResNet-50](https://arxiv.org/abs/2103.00020)    | 59.81    | 23.24      | 52.91       | 60.72      | 35.48      | 46.43   | 43.09       |
-| [CoOp](https://arxiv.org/abs/2109.01134)              | **63.33**| 23.06      | 55.40       | 56.60      | 34.67      | 46.61   | 42.43       |
-| [CoCoOp](https://arxiv.org/abs/2203.05557)            | 62.81    | 23.32      | 55.72       | 57.74      | 34.48      | 46.81   | 42.82       |
-| [Tip-Adapter](https://arxiv.org/abs/2111.03930)       | 62.03    | 23.13      | 53.97       | 60.35      | 35.74      | 47.04   | 43.30       |
-| [TPT](https://arxiv.org/abs/2209.07511)               | 60.74    | 26.67      | 54.70       | 59.11      | 35.09      | 47.26   | 43.89       |
-| [DiffTPT](https://arxiv.org/abs/2308.06038)            | 60.80    | **31.06**  | **55.80**   | 58.80      | 37.10      | 48.71   | 45.69       |
-| **TDA (Ours)**    | 61.35    | 30.29      | 55.54       | **62.58**  | **38.12**  | **49.58** | **46.63**  |
+```bash
+# vanilla TDA baseline (no controls)
+python tda_stable.py --config configs --datasets A/V/dtd --backbone ViT-B/16 \
+    --controls none
 
-#### Cross-Domain Benchmark
-| Method           | Aircraft | Caltech101 | Cars  | DTD   | EuroSAT | Flower102 | Food101 | Pets  | SUN397 | UCF101 | Average |
-|-----------------------|:-------:|:----------:|:-----:|:-----:|:-------:|:---------:|:-------:|:-----:|:------:|:------:|:-------:|
-| [CLIP-ResNet-50](https://arxiv.org/abs/2103.00020)        | 16.11    | 87.26      | 55.89 | 40.37 | 25.79   | 62.77     | 74.82   | 82.97 | 60.85  | 59.48  | 56.63   |
-| [CoOp](https://arxiv.org/abs/2109.01134)                  | 15.12    | 86.53      | 55.32 | 37.29 | 26.20   | 61.55     | 75.59   | 87.00 | 58.15  | 59.05  | 56.18   |
-| [CoCoOp](https://arxiv.org/abs/2203.05557)                | 14.61    | 87.38      | 56.22 | 38.53 | 28.73   | 65.57     | 76.20   | **88.39** | 59.61  | 57.10  | 57.23   |
-| [TPT](https://arxiv.org/abs/2209.07511)                   | 17.58    | 87.02      | 58.46 | 40.84 | 28.33   | 62.69     | 74.88   | 84.49 | 61.46  | 60.82  | 57.66   |
-| [DiffTPT](https://arxiv.org/abs/2308.06038)               | 17.60    | 86.89      | **60.71** | 40.72 | 41.04   | 63.53     | **79.21**   | 83.40 | **62.72**  | 62.67  | 59.85   |
-| **TDA (Ours)**                                            | **17.61**| **89.70**  | 57.78 | **43.74** | **42.11** | **68.74** | 77.75   | 86.18 | 62.53  | **64.18** | **61.03**  | 
+# individual controls
+python tda_stable.py --config configs --datasets A/dtd --backbone ViT-B/16 \
+    --controls margin
 
+python tda_stable.py --config configs --datasets A/dtd --backbone ViT-B/16 \
+    --controls momentum
 
-## Citation
-```bibtex
-@article{karmanov2024efficient,
-          title={Efficient Test-Time Adaptation of Vision-Language Models},
-          author={Karmanov, Adilbek and Guan, Dayan and Lu, Shijian and El Saddik, Abdulmotaleb and Xing, Eric},
-          journal={The IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-          year={2024}
-  }
+python tda_stable.py --config configs --datasets A/dtd --backbone ViT-B/16 \
+    --controls decay
+
+# all three combined
+python tda_stable.py --config configs --datasets A/V/dtd --backbone ViT-B/16 \
+    --controls margin momentum decay
+
+# hyperparameter sweeps
+python tda_stable.py --config configs --datasets A/dtd --backbone RN50 \
+    --controls margin --margin-thresh 10.0
+
+python tda_stable.py --config configs --datasets A/dtd --backbone RN50 \
+    --controls momentum --momentum 0.95
+
+python tda_stable.py --config configs --datasets A/dtd --backbone RN50 \
+    --controls decay --decay-factor 0.995
+
+python tda_stable.py --config configs --datasets A/dtd --backbone RN50 \
+    --controls none --shot-capacity 5
 ```
 
+#### Arguments
 
+| Argument | Default | Description |
+|---|---|---|
+| `--controls` | `margin momentum decay` | Controls to enable, or `none` for vanilla TDA |
+| `--margin-thresh` | `5.0` | Top-1 minus top-2 logit gap threshold |
+| `--momentum` | `0.9` | Blend weight on existing cache prototype |
+| `--decay-factor` | `0.999` | Per-step affinity decay (1.0 = no decay) |
+| `--shot-capacity` | from config | Override positive cache shot capacity |
+| `--backbone` | — | `RN50` or `ViT-B/16` |
+| `--datasets` | — | `/`-separated: `I A V R S caltech101 dtd eurosat fgvc food101 oxford_flowers oxford_pets stanford_cars sun397 ucf101` |
 
-## Contact
-If you have any questions, feel free to create an issue in this repository or contact us via email at adilbek.karmanov@mbzuai.ac.ae or dayan.guan@ntu.edu.sg.
+---
+
+### Stream-Order Sensitivity (`stream_order.py`)
+
+```bash
+# ViT-B/16, 3 seeds (~1 hour)
+python stream_order.py --config configs --backbone ViT-B/16 \
+    --data-root ./dataset/ --seeds 3
+
+# RN50, 3 seeds (~1 hour)
+python stream_order.py --config configs --backbone RN50 \
+    --data-root ./dataset/ --seeds 3
+```
+
+Results saved after each seed to `results/stream_order_<backbone>_<date>.csv`.
+
+---
+
+## Results
+
+### Reproduction + Control Ablations
+
+#### RN50
+
+| Control | IN-A | DTD |
+|---|:---:|:---:|
+| TDA baseline (reproduced) | 30.98 | 44.09 |
+| + Margin | 30.81 | 40.37 |
+| + Momentum | 30.85 | 43.62 |
+| + Decay | 30.98 | 44.03 |
+| All three | 30.91 | 42.20 |
+
+#### ViT-B/16
+
+| Control | IN-A | DTD |
+|---|:---:|:---:|
+| TDA baseline (reproduced) | 60.43 | **46.75** |
+| + Margin | **60.45** | 44.44 |
+| + Momentum | 60.17 | 45.45 |
+| + Decay | 60.43 | 46.69 |
+| All three | 59.91 | 44.03 |
+
+### Shot Capacity vs. Latency (RN50)
+
+| k | IN-A (%) | DTD (%) | Latency (ms/img) |
+|---|:---:|:---:|:---:|
+| 1 | 30.85 | 43.79 | **429** |
+| 2 | 30.91 | **43.85** | 664 |
+| 3 | 30.98 | 43.56 | 640 |
+| 5 | **31.00** | 43.85 | 720 |
+| 8 | 30.84 | 42.91 | 739 |
+
+---
+
+## Project Report
+
+Full details: `report/main.tex` — compile with pdfLaTeX on Overleaf (upload `main.tex` + `references.bib`).
 
 ## Acknowledgements
-Our gratitude goes to the authors of [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter), [TPT](https://github.com/azshue/TPT), and [CoOp/CoCoOp](https://github.com/KaiyangZhou/CoOp) for sharing their work through open-source implementation and for providing detailed instructions on data preparation.
+Builds on [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter), [TPT](https://github.com/azshue/TPT), and [CoOp/CoCoOp](https://github.com/KaiyangZhou/CoOp).

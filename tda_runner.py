@@ -1,5 +1,7 @@
 import random
 import argparse
+import csv
+import os
 import wandb
 from tqdm import tqdm
 from datetime import datetime
@@ -64,7 +66,7 @@ def compute_cache_logits(image_features, cache, alpha, beta, clip_weights, neg_m
         cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
         return alpha * cache_logits
 
-def run_test_tda(pos_cfg, neg_cfg, loader, clip_model, clip_weights):
+def run_test_tda(pos_cfg, neg_cfg, loader, clip_model, clip_weights, use_wandb=False):
     with torch.no_grad():
         pos_cache, neg_cache, accuracies = {}, {}, []
         
@@ -95,13 +97,36 @@ def run_test_tda(pos_cfg, neg_cfg, loader, clip_model, clip_weights):
                 
             acc = cls_acc(final_logits, target)  
             accuracies.append(acc)
-            wandb.log({"Averaged test accuracy": sum(accuracies)/len(accuracies)}, commit=True)
+            if use_wandb:
+                wandb.log({"Averaged test accuracy": sum(accuracies)/len(accuracies)}, commit=True)
 
             if i%1000==0:
                 print("---- TDA's test accuracy: {:.2f}. ----\n".format(sum(accuracies)/len(accuracies)))
         print("---- TDA's test accuracy: {:.2f}. ----\n".format(sum(accuracies)/len(accuracies)))   
         return sum(accuracies)/len(accuracies)
 
+
+
+DATASET_FULL_NAMES = {
+    # OOD
+    'I': 'ImageNet',
+    'A': 'ImageNet-A',
+    'V': 'ImageNet-V2',
+    'R': 'ImageNet-R',
+    'S': 'ImageNet-Sketch',
+    # Cross-domain
+    'caltech101':     'Caltech101',
+    'dtd':            'DTD',
+    'eurosat':        'EuroSAT',
+    'fgvc':           'FGVC-Aircraft',
+    'food101':        'Food101',
+    'oxford_flowers': 'Flowers102',
+    'oxford_pets':    'OxfordPets',
+    'stanford_cars':  'StanfordCars',
+    'sun397':         'SUN397',
+    'ucf101':         'UCF101',
+}
+OOD_DATASETS = {'I', 'A', 'V', 'R', 'S'}
 
 
 def main():
@@ -116,31 +141,49 @@ def main():
     random.seed(1)
     torch.manual_seed(1)
 
+    date = datetime.now().strftime("%b%d_%H-%M-%S")
     if args.wandb:
-        date = datetime.now().strftime("%b%d_%H-%M-%S")
         group_name = f"{args.backbone}_{args.datasets}_{date}"
-    
+
+    os.makedirs("results", exist_ok=True)
+    backbone_tag = args.backbone.replace('/', '_')
+    results_path = f"results/{backbone_tag}_{date}.csv"
+
     # Run TDA on each dataset
     datasets = args.datasets.split('/')
     for dataset_name in datasets:
-        print(f"Processing {dataset_name} dataset.")
-        
+        full_name = DATASET_FULL_NAMES.get(dataset_name, dataset_name)
+        split_type = 'OOD' if dataset_name in OOD_DATASETS else 'cross-domain'
+        print(f"Processing {full_name} ({split_type}) dataset.")
+
         cfg = get_config_file(config_path, dataset_name)
         print("\nRunning dataset configurations:")
         print(cfg, "\n")
-        
+
         test_loader, classnames, template = build_test_data_loader(dataset_name, args.data_root, preprocess)
         clip_weights = clip_classifier(classnames, template, clip_model)
 
         if args.wandb:
-            run_name = f"{dataset_name}"
-            run = wandb.init(project="ETTA-CLIP", config=cfg, group=group_name, name=run_name)
+            run = wandb.init(
+                project="ETTA-CLIP",
+                config={**cfg, 'backbone': args.backbone, 'dataset': full_name, 'type': split_type},
+                group=group_name,
+                name=f"{args.backbone}_{full_name}",
+            )
 
-        acc = run_test_tda(cfg['positive'], cfg['negative'], test_loader, clip_model, clip_weights)
+        acc = run_test_tda(cfg['positive'], cfg['negative'], test_loader, clip_model, clip_weights, use_wandb=args.wandb)
 
         if args.wandb:
-            wandb.log({f"{dataset_name}": acc})
+            wandb.log({'final_accuracy': acc, 'dataset': full_name, 'type': split_type})
             run.finish()
+
+        write_header = not os.path.exists(results_path)
+        with open(results_path, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=['backbone', 'type', 'dataset', 'accuracy'])
+            if write_header:
+                writer.writeheader()
+            writer.writerow({'backbone': args.backbone, 'type': split_type, 'dataset': full_name, 'accuracy': round(acc, 2)})
+        print(f"Result saved → {results_path}")
 
 if __name__ == "__main__":
     main()

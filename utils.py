@@ -127,7 +127,7 @@ def get_config_file(config_path, dataset_name):
 def build_test_data_loader(dataset_name, root_path, preprocess):
     if dataset_name == 'I':
         dataset = ImageNet(root_path, preprocess)
-        test_loader = torch.utils.data.DataLoader(dataset.test, batch_size=1, num_workers=8, shuffle=True)
+        test_loader = torch.utils.data.DataLoader(dataset.test, batch_size=1, num_workers=32, shuffle=True, pin_memory=True, persistent_workers=True, prefetch_factor=4)
     
     elif dataset_name in ['A','V','R','S']:
         preprocess = get_ood_preprocess()
