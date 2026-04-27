@@ -1,0 +1,3 @@
+backbone,controls,margin_thresh,momentum,decay_factor,shot_capacity,type,dataset,accuracy,latency_ms
+ViT-B/16,decay,5.0,0.9,0.99,3,OOD,ImageNet-A,60.39,138.23
+ViT-B/16,decay,5.0,0.9,0.99,3,cross-domain,DTD,44.92,6.3

@@ -1,0 +1,13 @@
+backbone,controls,type,dataset,accuracy
+RN50,baseline,OOD,ImageNet-A,30.98
+RN50,baseline,OOD,ImageNet-V2,55.19
+RN50,baseline,cross-domain,Caltech101,89.37
+RN50,baseline,cross-domain,DTD,44.09
+RN50,baseline,cross-domain,EuroSAT,45.84
+RN50,baseline,cross-domain,FGVC-Aircraft,16.41
+RN50,baseline,cross-domain,Food101,77.65
+RN50,baseline,cross-domain,Flowers102,68.62
+RN50,baseline,cross-domain,OxfordPets,85.94
+RN50,baseline,cross-domain,StanfordCars,57.49
+RN50,baseline,cross-domain,SUN397,62.74
+RN50,baseline,cross-domain,UCF101,64.16

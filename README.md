@@ -186,11 +186,7 @@ Results saved after each seed to `results/stream_order_<backbone>_<date>.csv`.
 | 5 | **31.00** | 43.85 | 720 |
 | 8 | 30.84 | 42.91 | 739 |
 
----
 
-## Project Report
-
-Full details: `report/main.tex` — compile with pdfLaTeX on Overleaf (upload `main.tex` + `references.bib`).
 
 ## Acknowledgements
 Builds on [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter), [TPT](https://github.com/azshue/TPT), and [CoOp/CoCoOp](https://github.com/KaiyangZhou/CoOp).

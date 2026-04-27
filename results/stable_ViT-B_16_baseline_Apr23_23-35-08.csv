@@ -1,0 +1,13 @@
+backbone,controls,type,dataset,accuracy
+ViT-B/16,baseline,OOD,ImageNet-A,60.43
+ViT-B/16,baseline,OOD,ImageNet-V2,64.37
+ViT-B/16,baseline,cross-domain,Caltech101,94.04
+ViT-B/16,baseline,cross-domain,DTD,46.75
+ViT-B/16,baseline,cross-domain,EuroSAT,60.22
+ViT-B/16,baseline,cross-domain,FGVC-Aircraft,24.45
+ViT-B/16,baseline,cross-domain,Food101,86.05
+ViT-B/16,baseline,cross-domain,Flowers102,71.7
+ViT-B/16,baseline,cross-domain,OxfordPets,89.94
+ViT-B/16,baseline,cross-domain,StanfordCars,67.19
+ViT-B/16,baseline,cross-domain,SUN397,67.89
+ViT-B/16,baseline,cross-domain,UCF101,70.82

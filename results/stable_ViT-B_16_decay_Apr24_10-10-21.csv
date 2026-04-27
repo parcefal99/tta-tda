@@ -1,0 +1,13 @@
+backbone,controls,margin_thresh,momentum,decay_factor,shot_capacity,type,dataset,accuracy,latency_ms
+ViT-B/16,decay,5.0,0.9,0.999,3,OOD,ImageNet-A,60.43,688.84
+ViT-B/16,decay,5.0,0.9,0.999,3,OOD,ImageNet-V2,64.37,497.02
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,Caltech101,94.04,7.74
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,DTD,46.69,7.73
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,EuroSAT,60.21,7.18
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,FGVC-Aircraft,24.45,7.8
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,Food101,86.04,20.25
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,Flowers102,71.7,20.7
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,OxfordPets,90.0,19.18
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,StanfordCars,67.17,73.47
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,SUN397,67.9,82.31
+ViT-B/16,decay,5.0,0.9,0.999,3,cross-domain,UCF101,70.82,23.74

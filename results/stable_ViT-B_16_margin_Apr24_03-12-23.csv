@@ -1,0 +1,13 @@
+backbone,controls,type,dataset,accuracy
+ViT-B/16,margin,OOD,ImageNet-A,60.45
+ViT-B/16,margin,OOD,ImageNet-V2,64.19
+ViT-B/16,margin,cross-domain,Caltech101,93.51
+ViT-B/16,margin,cross-domain,DTD,44.44
+ViT-B/16,margin,cross-domain,EuroSAT,56.04
+ViT-B/16,margin,cross-domain,FGVC-Aircraft,18.87
+ViT-B/16,margin,cross-domain,Food101,85.99
+ViT-B/16,margin,cross-domain,Flowers102,70.56
+ViT-B/16,margin,cross-domain,OxfordPets,89.42
+ViT-B/16,margin,cross-domain,StanfordCars,65.8
+ViT-B/16,margin,cross-domain,SUN397,67.54
+ViT-B/16,margin,cross-domain,UCF101,68.09

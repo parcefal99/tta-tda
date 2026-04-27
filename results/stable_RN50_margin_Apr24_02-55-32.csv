@@ -1,0 +1,13 @@
+backbone,controls,type,dataset,accuracy
+RN50,margin,OOD,ImageNet-A,30.81
+RN50,margin,OOD,ImageNet-V2,55.01
+RN50,margin,cross-domain,Caltech101,89.09
+RN50,margin,cross-domain,DTD,40.37
+RN50,margin,cross-domain,EuroSAT,35.49
+RN50,margin,cross-domain,FGVC-Aircraft,12.54
+RN50,margin,cross-domain,Food101,77.6
+RN50,margin,cross-domain,Flowers102,67.32
+RN50,margin,cross-domain,OxfordPets,85.53
+RN50,margin,cross-domain,StanfordCars,56.4
+RN50,margin,cross-domain,SUN397,62.31
+RN50,margin,cross-domain,UCF101,63.76

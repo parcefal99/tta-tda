@@ -1,0 +1,3 @@
+backbone,controls,margin_thresh,momentum,decay_factor,shot_capacity,type,dataset,accuracy,latency_ms
+RN50,margin,20.0,0.9,0.999,3,OOD,ImageNet-A,31.06,540.83
+RN50,margin,20.0,0.9,0.999,3,cross-domain,DTD,42.55,17.42

@@ -1,0 +1,5 @@
+backbone,controls,margin_thresh,momentum,decay_factor,shot_capacity,type,dataset,accuracy,latency_ms
+RN50,margin,2.0,0.9,0.999,3,OOD,ImageNet-A,30.81,568.44
+RN50,margin,2.0,0.9,0.999,3,OOD,ImageNet-V2,54.97,736.94
+RN50,margin,2.0,0.9,0.999,3,cross-domain,DTD,35.64,21.01
+RN50,margin,2.0,0.9,0.999,3,cross-domain,StanfordCars,55.88,66.25

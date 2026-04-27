@@ -1,0 +1,11 @@
+backbone,type,dataset,accuracy
+ViT-B/16,cross-domain,Caltech101,94.08
+ViT-B/16,cross-domain,DTD,44.98
+ViT-B/16,cross-domain,EuroSAT,63.14
+ViT-B/16,cross-domain,FGVC-Aircraft,25.11
+ViT-B/16,cross-domain,Food101,86.13
+ViT-B/16,cross-domain,Flowers102,71.05
+ViT-B/16,cross-domain,OxfordPets,89.78
+ViT-B/16,cross-domain,StanfordCars,67.5
+ViT-B/16,cross-domain,SUN397,68.12
+ViT-B/16,cross-domain,UCF101,71.13

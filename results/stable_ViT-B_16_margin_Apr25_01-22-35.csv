@@ -1,0 +1,5 @@
+backbone,controls,margin_thresh,momentum,decay_factor,shot_capacity,type,dataset,accuracy,latency_ms
+ViT-B/16,margin,1.0,0.9,0.999,3,OOD,ImageNet-A,60.45,909.63
+ViT-B/16,margin,1.0,0.9,0.999,3,OOD,ImageNet-V2,64.19,622.34
+ViT-B/16,margin,1.0,0.9,0.999,3,cross-domain,DTD,43.09,16.35
+ViT-B/16,margin,1.0,0.9,0.999,3,cross-domain,StanfordCars,66.11,81.44
