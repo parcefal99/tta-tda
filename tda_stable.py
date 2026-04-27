@@ -1,29 +1,3 @@
-"""
-TDA-Stable: Option B — Streaming noise robustness extension.
-
-Three independent controls on top of vanilla TDA:
-  1. margin_filter  — only cache if (top1 - top2) logit gap > threshold
-  2. momentum       — blend incoming feature into existing cache prototype
-  3. decay          — multiply all cached affinities by gamma < 1 each step
-
-Each control can be toggled on/off independently via --controls so every
-combination is ablatable. Results are saved to results/stable_<tag>_<date>.csv.
-
-Usage examples:
-  # all controls on
-  python tda_stable.py --config configs --datasets I/A/V/R/S --backbone RN50 \
-      --controls margin momentum decay
-
-  # baseline (no controls) — reproduces vanilla TDA
-  python tda_stable.py --config configs --datasets I/A/V/R/S --backbone RN50 \
-      --controls none
-
-  # single control ablations
-  python tda_stable.py ... --controls margin
-  python tda_stable.py ... --controls momentum
-  python tda_stable.py ... --controls decay
-"""
-
 import argparse
 import csv
 import operator
